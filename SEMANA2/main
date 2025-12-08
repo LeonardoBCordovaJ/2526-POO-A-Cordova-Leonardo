@@ -1,0 +1,244 @@
+"""
+Módulo principal de simulación de una carrera entre vehículos.
+
+Este programa demuestra el uso de Programación Orientada a Objetos (POO)
+con herencia y polimorfismo. Se definen distintas clases de vehículos
+que pueden "competir" entre sí en una carrera por turnos.
+"""
+
+from __future__ import annotations
+
+
+class Vehiculo:
+    """
+    Representa un vehículo genérico dentro de una carrera.
+
+    Atributos:
+        modelo (str): Nombre o modelo del vehículo.
+        velocidad (int): Capacidad de velocidad base del vehículo.
+        aceleracion (int): Capacidad de aceleración.
+        resistencia (int): Capacidad para resistir impactos.
+        combustible (int): Cantidad de combustible restante.
+    """
+
+    def __init__(
+        self,
+        modelo: str,
+        velocidad: int,
+        aceleracion: int,
+        resistencia: int,
+        combustible: int,
+    ) -> None:
+        self.modelo = modelo
+        self.velocidad = velocidad
+        self.aceleracion = aceleracion
+        self.resistencia = resistencia
+        self.combustible = combustible
+
+    def especificaciones(self) -> None:
+        """Muestra por pantalla las estadísticas actuales del vehículo."""
+        print(self.modelo, ":", sep="")
+        print("·Velocidad:", self.velocidad)
+        print("·Aceleración:", self.aceleracion)
+        print("·Resistencia:", self.resistencia)
+        print("·Combustible:", self.combustible)
+
+    def mejorar_vehiculo(self, velocidad: int, aceleracion: int, resistencia: int) -> None:
+        """
+        Mejora las características del vehículo.
+
+        Args:
+            velocidad: Cantidad a sumar a la velocidad actual.
+            aceleracion: Cantidad a sumar a la aceleración actual.
+            resistencia: Cantidad a sumar a la resistencia actual.
+        """
+        self.velocidad += velocidad
+        self.aceleracion += aceleracion
+        self.resistencia += resistencia
+
+    def en_carrera(self) -> bool:
+        """
+        Indica si el vehículo sigue en carrera.
+
+        Returns:
+            bool: True si el combustible es mayor a cero, False en caso contrario.
+        """
+        return self.combustible > 0
+
+    def abandonar(self) -> None:
+        """Marca al vehículo como fuera de la carrera por falta de combustible."""
+        self.combustible = 0
+        print(self.modelo, "se ha quedado sin combustible y abandona la carrera.")
+
+    def impacto(self, rival: Vehiculo) -> int:
+        """
+        Calcula el daño provocado a un vehículo rival.
+
+        Args:
+            rival (Vehiculo): Vehículo sobre el que se aplica el impacto.
+
+        Returns:
+            int: Cantidad de combustible que perderá el rival.
+        """
+        return self.velocidad - rival.resistencia
+
+    def adelantar(self, rival: Vehiculo) -> None:
+        """
+        Ejecuta la acción de adelantar / impactar a un rival.
+
+        Args:
+            rival (Vehiculo): Vehículo que recibe el impacto.
+        """
+        dano = self.impacto(rival)
+        rival.combustible -= dano
+        print(self.modelo, "ha provocado", dano, "puntos de daño a", rival.modelo)
+        if rival.en_carrera():
+            print("Combustible de", rival.modelo, ":", rival.combustible)
+        else:
+            rival.abandonar()
+
+
+class AutoDeportivo(Vehiculo):
+    """
+    Vehículo de tipo auto deportivo, con un atributo extra de turbo.
+
+    Atributos adicionales:
+        turbo (int): Multiplicador de potencia del vehículo.
+    """
+
+    def __init__(
+        self,
+        modelo: str,
+        velocidad: int,
+        aceleracion: int,
+        resistencia: int,
+        combustible: int,
+        turbo: int,
+    ) -> None:
+        super().__init__(modelo, velocidad, aceleracion, resistencia, combustible)
+        self.turbo = turbo
+
+    def cambiar_turbo(self) -> None:
+        """
+        Permite cambiar el nivel de turbo mediante la entrada del usuario.
+
+        Se ofrecen dos opciones con distintos valores de potencia.
+        """
+        opcion = int(
+            input(
+                "Elige un turbo: (1) Turbo básico, potencia 5. "
+                "(2) Turbo avanzado, potencia 8: "
+            )
+        )
+        if opcion == 1:
+            self.turbo = 5
+        elif opcion == 2:
+            self.turbo = 8
+        else:
+            print("Opción de turbo incorrecta")
+
+    def especificaciones(self) -> None:
+        """Muestra las estadísticas del vehículo, incluyendo el turbo."""
+        super().especificaciones()
+        print("·Turbo:", self.turbo)
+
+    def impacto(self, rival: Vehiculo) -> int:
+        """
+        Calcula el impacto considerando el turbo del auto deportivo.
+        """
+        return self.velocidad * self.turbo - rival.resistencia
+
+
+class Camioneta(Vehiculo):
+    """
+    Vehículo de tipo camioneta, con un atributo extra de blindaje.
+
+    Atributos adicionales:
+        blindaje (int): Factor de protección/ofensiva de la camioneta.
+    """
+
+    def __init__(
+        self,
+        modelo: str,
+        velocidad: int,
+        aceleracion: int,
+        resistencia: int,
+        combustible: int,
+        blindaje: int,
+    ) -> None:
+        super().__init__(modelo, velocidad, aceleracion, resistencia, combustible)
+        self.blindaje = blindaje
+
+    def especificaciones(self) -> None:
+        """Muestra las estadísticas del vehículo, incluyendo el blindaje."""
+        super().especificaciones()
+        print("·Blindaje:", self.blindaje)
+
+    def impacto(self, rival: Vehiculo) -> int:
+        """
+        Calcula el impacto de la camioneta usando su aceleración y blindaje.
+        """
+        return self.aceleracion * self.blindaje - rival.resistencia
+
+
+def carrera(vehiculo_1: Vehiculo, vehiculo_2: Vehiculo) -> None:
+    """
+    Simula una carrera por turnos entre dos vehículos.
+
+    En cada vuelta, ambos vehículos se atacan mutuamente hasta que
+    uno de ellos se queda sin combustible (o los dos).
+
+    Args:
+        vehiculo_1 (Vehiculo): Primer participante de la carrera.
+        vehiculo_2 (Vehiculo): Segundo participante de la carrera.
+    """
+    vuelta = 1
+    while vehiculo_1.en_carrera() and vehiculo_2.en_carrera():
+        print("\n========================= Vuelta", vuelta, "=========================")
+        print(">>> Acción de", vehiculo_1.modelo, ":", sep="")
+        vehiculo_1.adelantar(vehiculo_2)
+
+        if not vehiculo_2.en_carrera():
+            break
+
+        print(">>> Acción de", vehiculo_2.modelo, ":", sep="")
+        vehiculo_2.adelantar(vehiculo_1)
+        vuelta += 1
+
+    print("\n===================== Fin de la carrera =====================")
+    if vehiculo_1.en_carrera() and not vehiculo_2.en_carrera():
+        print("Ha ganado", vehiculo_1.modelo)
+    elif vehiculo_2.en_carrera() and not vehiculo_1.en_carrera():
+        print("Ha ganado", vehiculo_2.modelo)
+    else:
+        print("Empate: ambos vehículos han abandonado.")
+
+
+def main() -> None:
+    """
+    Punto de entrada principal del programa.
+
+    1. Crea las instancias de los vehículos participantes.
+    2. Muestra sus especificaciones iniciales.
+    3. Ejecuta la simulación de la carrera llamando a `carrera()`.
+
+    Esta función se ejecuta solo cuando el archivo se ejecuta como
+    script principal, no cuando se importa como módulo.
+    """
+    # Creación de los vehículos participantes
+    vehiculo_1 = AutoDeportivo("Ferrari F40", 25, 12, 3, 100, 6)
+    vehiculo_2 = Camioneta("Monster Truck", 8, 18, 5, 120, 4)
+
+    # Se muestran las especificaciones iniciales de cada vehículo
+    print("=== Especificaciones iniciales ===")
+    vehiculo_1.especificaciones()
+    print()
+    vehiculo_2.especificaciones()
+
+    # Inicio de la simulación de la carrera
+    carrera(vehiculo_1, vehiculo_2)
+
+
+# Bloque estándar para ejecutar el programa
+if __name__ == "__main__":
+    main()
